@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using backend.Data;
 using backend.Services;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Register EF Core with SQLite
@@ -13,6 +14,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<ParticipantService>();
 builder.Services.AddScoped<SessionService>();
 builder.Services.AddScoped<CoordinatorService>();
+builder.Services.AddScoped<ParticipantService>();
+builder.Services.AddScoped<CoordinatorService>();
+builder.Services.AddScoped<SessionService>();
 
 // CORS so the Vite frontend can call us
 builder.Services.AddCors(options =>

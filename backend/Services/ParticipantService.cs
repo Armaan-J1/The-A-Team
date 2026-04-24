@@ -27,13 +27,12 @@ public class ParticipantService
     public async Task<List<ParticipantAssignmentDto>> GetAssignedParticipantsAsync(int coordinatorId)
     {
         var departmentId = await GetDepartmentIdByCoordinatorIdAsync(coordinatorId);
-        
         if (departmentId == null)
             return new List<ParticipantAssignmentDto>();
 
         return await _context.Participants
             .Where(p => p.SessionId != null)
-            .Where(p => p.DepartmentId == departmentId) // Direct department check
+            .Where(p => p.DepartmentId == departmentId)
             .Select(p => new ParticipantAssignmentDto
             {
                 Name = p.Name,
@@ -47,13 +46,12 @@ public class ParticipantService
     public async Task<List<ParticipantAssignmentDto>> GetNonAssignedParticipantsAsync(int coordinatorId)
     {
         var departmentId = await GetDepartmentIdByCoordinatorIdAsync(coordinatorId);
-        
         if (departmentId == null)
             return new List<ParticipantAssignmentDto>();
 
         return await _context.Participants
             .Where(p => p.SessionId == null)
-            .Where(p => p.DepartmentId == departmentId) // Direct department check
+            .Where(p => p.DepartmentId == departmentId)
             .Select(p => new ParticipantAssignmentDto
             {
                 Name = p.Name,
@@ -67,12 +65,11 @@ public class ParticipantService
     public async Task<List<ParticipantAssignmentDto>> GetAllParticipantsAsync(int coordinatorId)
     {
         var departmentId = await GetDepartmentIdByCoordinatorIdAsync(coordinatorId);
-        
         if (departmentId == null)
             return new List<ParticipantAssignmentDto>();
 
         return await _context.Participants
-            .Where(p => p.DepartmentId == departmentId) // Direct department check
+            .Where(p => p.DepartmentId == departmentId)
             .Select(p => new ParticipantAssignmentDto
             {
                 Name = p.Name,
@@ -91,42 +88,66 @@ public class ParticipantService
             .FirstOrDefaultAsync();
     }
 
-    // Assign a participant to a session with department capacity validation
-    public async Task<bool> AssignParticipantAsync(int participantId, int sessionId)
+    // Assign a participant to a session with full rule enforcement
+    public async Task<AssignmentResult> AssignParticipantAsync(int coordinatorId, int participantId, int sessionId)
     {
-        // Step 1: Get the participant with their department
+        var coordinator = await _context.Coordinators.FindAsync(coordinatorId);
+        if (coordinator == null)
+            return AssignmentResult.Fail("coordinator_not_found", "Coordinator does not exist");
+
         var participant = await _context.Participants
             .Include(p => p.Department)
             .FirstOrDefaultAsync(p => p.Id == participantId);
-        
-        if (participant == null)
-            return false;
 
-        // Step 2: Get the session
+        if (participant == null)
+            return AssignmentResult.Fail("participant_not_found", "Participant does not exist");
+
         var session = await _context.Sessions.FindAsync(sessionId);
         if (session == null)
-            return false;
+            return AssignmentResult.Fail("session_not_found", "Session does not exist");
 
-        // Step 3: Get the department directly from participant
+        // Rule 4: Coordinator can only manage own department
+        if (participant.DepartmentId != coordinator.DepartmentId)
+            return AssignmentResult.Fail(
+                "department_scope_violation",
+                "Coordinator can only assign participants from their own department"
+            );
+
+        // Rule 2: Participant must not already be assigned
+        if (participant.SessionId != null)
+            return AssignmentResult.Fail(
+                "already_assigned",
+                $"{participant.Name} is already assigned to another session"
+            );
+
+        // Count participants in session once, reuse below
+        var currentInSession = await _context.Participants
+            .Where(p => p.SessionId == sessionId)
+            .ToListAsync();
+
+        // Rule 1: Session capacity
+        if (currentInSession.Count >= session.Capacity)
+            return AssignmentResult.Fail(
+                "session_full",
+                $"Session is full ({session.Capacity}/{session.Capacity})"
+            );
+
+        // Rule 3: Department per-session limit
         var department = participant.Department;
         if (department == null)
-            return false;
+            return AssignmentResult.Fail("department_not_found", "Participant's department is missing");
 
-        // Step 4: Count participants from this department already assigned to this session
-        var departmentParticipantsCount = await _context.Participants
-            .Where(p => p.SessionId == sessionId)
-            .Where(p => p.DepartmentId == department.Id)
-            .CountAsync();
+        var sameDeptCount = currentInSession.Count(p => p.DepartmentId == department.Id);
+        if (sameDeptCount >= department.MaxPerSession)
+            return AssignmentResult.Fail(
+                "department_limit_reached",
+                $"{department.Name} has no seats left in this session"
+            );
 
-        // Step 5: Check capacity
-        if (departmentParticipantsCount >= department.MaxPerSession)
-            return false;
-
-        // Step 6: Assign the participant
+        // All rules passed
         participant.SessionId = sessionId;
         await _context.SaveChangesAsync();
-        
-        return true;
+        return AssignmentResult.Ok();
     }
 }
 
@@ -135,4 +156,21 @@ public class ParticipantAssignmentDto
 {
     public string Name { get; set; } = string.Empty;
     public bool IsAssigned { get; set; }
+}
+
+// Structured result for assignment operations
+public class AssignmentResult
+{
+    public bool Success { get; set; }
+    public string? Reason { get; set; }
+    public string? Message { get; set; }
+
+    public static AssignmentResult Ok() => new() { Success = true };
+
+    public static AssignmentResult Fail(string reason, string message) => new()
+    {
+        Success = false,
+        Reason = reason,
+        Message = message
+    };
 }
