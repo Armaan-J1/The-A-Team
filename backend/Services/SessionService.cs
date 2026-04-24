@@ -13,16 +13,20 @@ public class SessionService
         _context = context;
     }
 
-    // Get all sessions
+    // Get all sessions with seat availability
     public async Task<List<SessionDto>> GetSessionsAsync()
     {
         return await _context.Sessions
+            .Include(s => s.Participants)
             .OrderBy(s => s.Slot)
             .ThenBy(s => s.TimeRange)
             .Select(s => new SessionDto
             {
+                Id = s.Id,
                 Name = s.TimeRange,
-                Slot = s.Slot.ToString()
+                Slot = s.Slot.ToString(),
+                TotalCapacity = s.Capacity,
+                RemainingSeats = s.Capacity - s.Participants.Count
             })
             .ToListAsync();
     }
@@ -31,11 +35,15 @@ public class SessionService
     public async Task<SessionDto?> GetSessionByIdAsync(int sessionId)
     {
         var session = await _context.Sessions
+            .Include(s => s.Participants)
             .Where(s => s.Id == sessionId)
             .Select(s => new SessionDto
             {
+                Id = s.Id,
                 Name = s.TimeRange,
-                Slot = s.Slot.ToString()
+                Slot = s.Slot.ToString(),
+                TotalCapacity = s.Capacity,
+                RemainingSeats = s.Capacity - s.Participants.Count
             })
             .FirstOrDefaultAsync();
 
@@ -46,12 +54,16 @@ public class SessionService
     public async Task<List<SessionDto>> GetSessionsBySlotAsync(string slot)
     {
         return await _context.Sessions
+            .Include(s => s.Participants)
             .Where(s => s.Slot.ToString() == slot)
             .OrderBy(s => s.TimeRange)
             .Select(s => new SessionDto
             {
+                Id = s.Id,
                 Name = s.TimeRange,
-                Slot = s.Slot.ToString()
+                Slot = s.Slot.ToString(),
+                TotalCapacity = s.Capacity,
+                RemainingSeats = s.Capacity - s.Participants.Count
             })
             .ToListAsync();
     }
@@ -60,6 +72,9 @@ public class SessionService
 // DTO for Session
 public class SessionDto
 {
+    public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Slot { get; set; } = string.Empty;
+    public int TotalCapacity { get; set; }
+    public int RemainingSeats { get; set; }
 }
