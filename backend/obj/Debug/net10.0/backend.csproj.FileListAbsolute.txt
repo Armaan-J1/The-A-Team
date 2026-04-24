@@ -146,3 +146,4 @@ C:\Users\armaa\hackathon\seat-allocation\backend\obj\Debug\net10.0\refint\backen
 C:\Users\armaa\hackathon\seat-allocation\backend\obj\Debug\net10.0\backend.pdb
 C:\Users\armaa\hackathon\seat-allocation\backend\obj\Debug\net10.0\backend.genruntimeconfig.cache
 C:\Users\armaa\hackathon\seat-allocation\backend\obj\Debug\net10.0\ref\backend.dll
+C:\Users\armaa\hackathon\seat-allocation\backend\obj\Debug\net10.0\backend.sourcelink.json
