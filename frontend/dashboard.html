@@ -1,0 +1,894 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Seat Allocation — Dashboard</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Syne:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      :root {
+        --b50: #e6f1fb;
+        --b100: #b5d4f4;
+        --b200: #85b7eb;
+        --b400: #378add;
+        --b600: #185fa5;
+        --b800: #0c447c;
+        --b900: #042c53;
+        --g50: #f8fafc;
+        --g100: #eef2f7;
+        --g200: #d6dfe9;
+        --g400: #8fa3b8;
+        --g600: #5a6e82;
+        --g800: #2d3e50;
+        --red: #e24b4a;
+        --amber: #ef9f27;
+        --green: #4caf82;
+        --shadow:
+          0 1px 3px rgba(4, 44, 83, 0.08), 0 4px 16px rgba(4, 44, 83, 0.06);
+      }
+      html {
+        font-size: 15px;
+      }
+      body {
+        font-family: "DM Sans", sans-serif;
+        background: #ebf4fd;
+        min-height: 100vh;
+        color: var(--g800);
+      }
+
+      nav {
+        background: var(--b900);
+        height: 60px;
+        display: flex;
+        align-items: center;
+        padding: 0 2rem;
+        border-bottom: 2px solid var(--b800);
+        position: sticky;
+        top: 0;
+        z-index: 50;
+      }
+      .logo {
+        font-family: "Syne", sans-serif;
+        font-size: 18px;
+        font-weight: 800;
+        color: #fff;
+        letter-spacing: 0.3px;
+      }
+      .logo em {
+        color: var(--b200);
+        font-style: normal;
+      }
+      .nav-right {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .nav-pill {
+        background: rgba(255, 255, 255, 0.12);
+        color: var(--b100);
+        font-size: 12px;
+        font-weight: 500;
+        padding: 4px 14px;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+      }
+      .back-btn {
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--b100);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        font-family: "DM Sans", sans-serif;
+        font-size: 12.5px;
+        font-weight: 500;
+        padding: 5px 14px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      .back-btn:hover {
+        background: rgba(255, 255, 255, 0.18);
+      }
+
+      .wrap {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem;
+      }
+
+      .page-head {
+        margin-bottom: 1.75rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+      }
+      .page-head h1 {
+        font-family: "Syne", sans-serif;
+        font-size: 24px;
+        font-weight: 800;
+        color: var(--b900);
+        line-height: 1.2;
+      }
+      .page-head p {
+        font-size: 13.5px;
+        color: var(--g600);
+        margin-top: 0.35rem;
+      }
+      .live-badge {
+        background: #f0fdf4;
+        color: #14532d;
+        border: 1px solid #bbf7d0;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 4px 12px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .live-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--green);
+        animation: pulse 2s infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.4;
+        }
+      }
+
+      /* ── STAT CARDS ── */
+      .stats-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin-bottom: 1.75rem;
+      }
+      .stat-card {
+        background: #fff;
+        border-radius: 12px;
+        border: 1px solid var(--g200);
+        padding: 1.1rem 1.25rem;
+        box-shadow: var(--shadow);
+      }
+      .stat-label {
+        font-size: 11.5px;
+        font-weight: 600;
+        color: var(--g600);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+      }
+      .stat-val {
+        font-family: "Syne", sans-serif;
+        font-size: 28px;
+        font-weight: 800;
+        color: var(--b800);
+        line-height: 1;
+      }
+      .stat-val.green {
+        color: #14532d;
+      }
+      .stat-val.amber {
+        color: #92400e;
+      }
+      .stat-sub {
+        font-size: 11.5px;
+        color: var(--g600);
+        margin-top: 0.35rem;
+      }
+
+      /* ── SESSIONS ── */
+      .section-title {
+        font-family: "Syne", sans-serif;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--b800);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 1rem;
+      }
+      .sessions-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-bottom: 1.75rem;
+      }
+
+      .session-card {
+        background: #fff;
+        border-radius: 14px;
+        border: 1px solid var(--g200);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+      .session-card.full {
+        border-color: var(--red);
+      }
+
+      .sc-head {
+        background: var(--b800);
+        padding: 1.1rem 1.25rem;
+      }
+      .sc-head-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 0.5rem;
+      }
+      .sc-title {
+        font-family: "Syne", sans-serif;
+        font-size: 16px;
+        font-weight: 700;
+        color: #fff;
+      }
+      .sc-time {
+        font-size: 11.5px;
+        color: var(--b100);
+        margin-top: 2px;
+      }
+      .sc-badge {
+        font-size: 11px;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 12px;
+        white-space: nowrap;
+        background: rgba(255, 255, 255, 0.15);
+        color: #fff;
+      }
+      .sc-badge.full-badge {
+        background: rgba(226, 75, 74, 0.3);
+        color: #fca5a5;
+      }
+      .sc-badge.warn-badge {
+        background: rgba(239, 159, 39, 0.25);
+        color: #fde68a;
+      }
+
+      .sc-bar {
+        height: 4px;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 2px;
+        overflow: hidden;
+      }
+      .sc-fill {
+        height: 100%;
+        border-radius: 2px;
+        background: var(--b200);
+        transition: width 0.5s;
+      }
+      .sc-fill.warn {
+        background: var(--amber);
+      }
+      .sc-fill.full {
+        background: var(--red);
+      }
+
+      .sc-body {
+        padding: 1.1rem 1.25rem;
+      }
+
+      /* dept breakdown */
+      .dept-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 6px 0;
+        border-bottom: 1px solid var(--g100);
+      }
+      .dept-row:last-child {
+        border-bottom: none;
+      }
+      .dept-name {
+        font-size: 12.5px;
+        font-weight: 500;
+        color: var(--g800);
+      }
+      .dept-chip {
+        font-size: 11px;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 10px;
+      }
+      .dept-chip.a {
+        background: #dbeafe;
+        color: #1e40af;
+      }
+      .dept-chip.b {
+        background: #d1fae5;
+        color: #065f46;
+      }
+      .dept-chip.c {
+        background: #fef3c7;
+        color: #92400e;
+      }
+      .dept-progress {
+        flex: 1;
+        margin: 0 10px;
+        height: 4px;
+        background: var(--g100);
+        border-radius: 2px;
+        overflow: hidden;
+      }
+      .dept-prog-fill {
+        height: 100%;
+        border-radius: 2px;
+        transition: width 0.4s;
+      }
+      .dp-a {
+        background: #93c5fd;
+      }
+      .dp-b {
+        background: #6ee7b7;
+      }
+      .dp-c {
+        background: #fcd34d;
+      }
+      .dept-frac {
+        font-size: 11.5px;
+        color: var(--g600);
+        white-space: nowrap;
+      }
+
+      /* people list */
+      .people-section {
+        margin-top: 0.85rem;
+      }
+      .people-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--g600);
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        margin-bottom: 0.5rem;
+      }
+      .people-list {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+      .person-row {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 12px;
+        color: var(--g800);
+        padding: 3px 0;
+      }
+      .person-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--b400);
+        flex-shrink: 0;
+      }
+      .person-dot.a {
+        background: #60a5fa;
+      }
+      .person-dot.b {
+        background: #34d399;
+      }
+      .person-dot.c {
+        background: #fbbf24;
+      }
+      .person-id {
+        font-size: 10.5px;
+        color: var(--g400);
+        margin-left: auto;
+      }
+      .no-people {
+        font-size: 12px;
+        color: var(--g400);
+        font-style: italic;
+        padding: 4px 0;
+      }
+
+      /* ── DEPT SUMMARY TABLE ── */
+      .dept-summary {
+        background: #fff;
+        border-radius: 14px;
+        border: 1px solid var(--g200);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        margin-bottom: 1.75rem;
+      }
+      .ds-head {
+        background: var(--b800);
+        padding: 1rem 1.5rem;
+      }
+      .ds-head h3 {
+        font-family: "Syne", sans-serif;
+        font-size: 14px;
+        font-weight: 700;
+        color: #fff;
+      }
+      .ds-head p {
+        font-size: 11.5px;
+        color: var(--b100);
+        margin-top: 2px;
+      }
+      table.ds-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .ds-table th {
+        padding: 9px 14px;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--b800);
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        text-align: left;
+        border-bottom: 1px solid var(--g200);
+        background: var(--b50);
+      }
+      .ds-table td {
+        padding: 10px 14px;
+        font-size: 13px;
+        border-bottom: 1px solid var(--g100);
+      }
+      .ds-table tr:last-child td {
+        border-bottom: none;
+      }
+      .ds-table tfoot td {
+        background: var(--b50);
+        font-weight: 600;
+        color: var(--b800);
+        border-top: 2px solid var(--g200);
+      }
+
+      /* constraint log */
+      .constraint-panel {
+        background: #fff;
+        border-radius: 14px;
+        border: 1px solid var(--g200);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+      .cp-head {
+        background: var(--b800);
+        padding: 1rem 1.5rem;
+      }
+      .cp-head h3 {
+        font-family: "Syne", sans-serif;
+        font-size: 14px;
+        font-weight: 700;
+        color: #fff;
+      }
+      .cp-body {
+        padding: 1rem 1.5rem;
+      }
+      .constraint-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0.65rem 0;
+        border-bottom: 1px solid var(--g100);
+        font-size: 13px;
+      }
+      .constraint-row:last-child {
+        border-bottom: none;
+      }
+      .c-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        flex-shrink: 0;
+      }
+      .c-icon.ok {
+        background: #d1fae5;
+        color: #065f46;
+      }
+      .c-icon.warn {
+        background: #fef3c7;
+        color: #92400e;
+      }
+      .c-label {
+        flex: 1;
+        color: var(--g800);
+      }
+      .c-status {
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .c-status.ok {
+        color: #065f46;
+      }
+      .c-status.warn {
+        color: #92400e;
+      }
+
+      @media (max-width: 680px) {
+        .stats-row {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .sessions-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <div class="logo">Smart<em>Seat</em></div>
+      <div class="nav-right">
+        <div class="nav-pill">Dashboard</div>
+        
+        <button
+          class="back-btn"
+          onclick="window.location.href ="partcipant.html"
+        >
+          ← Assign More
+        </button>
+      </div>
+    </nav>
+
+    <div class="wrap">
+      <div class="page-head">
+        <div>
+          <h1>Session Dashboard</h1>
+          <p>
+            Live view of all 3 sessions · 60 participants · Rule-enforced
+            allocation
+          </p>
+        </div>
+        <div class="live-badge">
+          <div class="live-dot"></div>
+          Live
+        </div>
+      </div>
+
+      <div class="stats-row" id="stats-row"></div>
+
+      <div class="section-title">Sessions</div>
+      <div class="sessions-grid" id="sessions-grid"></div>
+
+      <div class="section-title">Department Allocation Summary</div>
+      <div class="dept-summary">
+        <div class="ds-head">
+          <h3>Per-Department Seat Usage</h3>
+          <p>
+            Max 8 seats/session for Division A · Max 6 seats/session for
+            Divisions B and C
+          </p>
+        </div>
+        <table class="ds-table" id="dept-table"></table>
+      </div>
+
+    <script>
+      // ── SEED DATA (same shape as participant.html produces) ──────────────────────
+      const SESSIONS_META = {
+        morning: { label: "Morning", time: "09:00 – 10:30", capacity: 20 },
+        midday: { label: "Midday", time: "11:00 – 12:30", capacity: 20 },
+        afternoon: { label: "Afternoon", time: "13:00 – 14:30", capacity: 20 },
+      };
+      const DEPT_MAX = { A: 8, B: 6, C: 6 };
+      const DEPT_META = {
+        A: { label: "Division A", color: "a", total: 24 },
+        B: { label: "Division B", color: "b", total: 18 },
+        C: { label: "Division C", color: "c", total: 18 },
+      };
+      const SESSION_KEYS = ["morning", "midday", "afternoon"];
+
+      function genParticipants() {
+        const firstA = [
+          "Aiden",
+          "Priya",
+          "Luca",
+          "Zanele",
+          "Marcus",
+          "Sipho",
+          "Nomvula",
+          "Ryan",
+          "Mei",
+          "Thabo",
+          "Jessica",
+          "Omar",
+          "Sara",
+          "David",
+          "Fatima",
+          "James",
+          "Bongani",
+          "Anna",
+          "Lerato",
+          "Kyle",
+          "Naledi",
+          "Ruan",
+          "Ayasha",
+          "Lwazi",
+        ];
+        const firstB = [
+          "Hlengiwe",
+          "Tebogo",
+          "Clinton",
+          "Yusuf",
+          "Celeste",
+          "Moira",
+          "Brendan",
+          "Dineo",
+          "Ashwin",
+          "Zandi",
+          "Pieter",
+          "Nolwazi",
+          "Gareth",
+          "Palesa",
+          "Stefan",
+          "Thandeka",
+          "Anele",
+          "Refiloe",
+        ];
+        const firstC = [
+          "Kagiso",
+          "Lindiwe",
+          "Warren",
+          "Siyanda",
+          "Michelle",
+          "Andile",
+          "Taryn",
+          "Mpho",
+          "Devon",
+          "Zinhle",
+          "Petrus",
+          "Ayanda",
+          "Simone",
+          "Sello",
+          "Chantelle",
+          "Kabelo",
+          "Jenna",
+          "Morena",
+        ];
+        const last = [
+          "Mokoena",
+          "Naidoo",
+          "Ferreira",
+          "Dlamini",
+          "Webb",
+          "Ndlovu",
+          "Sithole",
+          "Botha",
+          "Lin",
+          "Khumalo",
+          "Pretorius",
+          "Patel",
+          "Kim",
+          "Okonkwo",
+          "Hassan",
+          "Pietersen",
+          "Zulu",
+          "du Toit",
+          "Dube",
+          "van Wyk",
+          "Mahlangu",
+          "Joubert",
+          "Singh",
+          "Mthembu",
+        ];
+        const out = [];
+        function pick(arr, i) {
+          return arr[i % arr.length];
+        }
+        firstA.forEach((f, i) =>
+          out.push({
+            id: `A-${String(i + 1).padStart(3, "0")}`,
+            name: `${f} ${pick(last, i)}`,
+            dept: "A",
+            status: "available",
+            assignedSession: null,
+          }),
+        );
+        firstB.forEach((f, i) =>
+          out.push({
+            id: `B-${String(i + 1).padStart(3, "0")}`,
+            name: `${f} ${pick(last, i + 5)}`,
+            dept: "B",
+            status: "available",
+            assignedSession: null,
+          }),
+        );
+        firstC.forEach((f, i) =>
+          out.push({
+            id: `C-${String(i + 1).padStart(3, "0")}`,
+            name: `${f} ${pick(last, i + 10)}`,
+            dept: "C",
+            status: "available",
+            assignedSession: null,
+          }),
+        );
+        return out;
+      }
+
+      // Load state from sessionStorage (set by participant.html) or use defaults
+      let allParticipants, allocation;
+      const saved = JSON.parse(
+        sessionStorage.getItem("allocationState") || "null",
+      );
+      if (saved) {
+        allParticipants = saved.participants;
+        allocation = saved.allocation;
+      } else {
+        allParticipants = genParticipants();
+        allocation = {
+          morning: { A: 0, B: 0, C: 0 },
+          midday: { A: 0, B: 0, C: 0 },
+          afternoon: { A: 0, B: 0, C: 0 },
+        };
+      }
+
+      // ── COMPUTE STATS ────────────────────────────────────────────────────────────
+      const totalAssigned = allParticipants.filter(
+        (p) => p.status === "assigned",
+      ).length;
+      const totalAvailable = allParticipants.filter(
+        (p) => p.status === "available",
+      ).length;
+      const totalSeats = 60;
+      const totalSessions = 3;
+      const overallPct = Math.round((totalAssigned / totalSeats) * 100);
+
+      // ── STAT CARDS ───────────────────────────────────────────────────────────────
+      document.getElementById("stats-row").innerHTML = `
+  <div class="stat-card">
+    <div class="stat-label">Total participants</div>
+    <div class="stat-val">${totalSeats}</div>
+    <div class="stat-sub">Across 3 departments</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Assigned</div>
+    <div class="stat-val" style="color:var(--b600)">${totalAssigned}</div>
+    <div class="stat-sub">${overallPct}% of total</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Unassigned</div>
+    <div class="stat-val amber">${totalAvailable}</div>
+    <div class="stat-sub">${100 - overallPct}% still to assign</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Sessions</div>
+    <div class="stat-val">${totalSessions}</div>
+    <div class="stat-sub">20 seats each · same day</div>
+  </div>
+`;
+
+      // ── SESSION CARDS ─────────────────────────────────────────────────────────────
+      document.getElementById("sessions-grid").innerHTML = SESSION_KEYS.map(
+        (key) => {
+          const meta = SESSIONS_META[key];
+          const alloc = allocation[key];
+          const total = alloc.A + alloc.B + alloc.C;
+          const avail = meta.capacity - total;
+          const pct = Math.round((total / meta.capacity) * 100);
+          const fillCls = pct >= 100 ? "full" : pct >= 75 ? "warn" : "";
+          const badgeCls =
+            pct >= 100 ? "full-badge" : pct >= 75 ? "warn-badge" : "";
+          const badgeTxt =
+            pct >= 100
+              ? "Full"
+              : pct >= 75
+                ? `${avail} left`
+                : `${avail} seats left`;
+          const isFull = pct >= 100;
+
+          // Participants in this session
+          const sessionPeople = allParticipants.filter(
+            (p) => p.assignedSession === key,
+          );
+
+          return `<div class="session-card${isFull ? " full" : ""}">
+    <div class="sc-head">
+      <div class="sc-head-top">
+        <div>
+          <div class="sc-title">${meta.label}</div>
+          <div class="sc-time">${meta.time}</div>
+        </div>
+        <span class="sc-badge ${badgeCls}">${badgeTxt}</span>
+      </div>
+      <div class="sc-bar" style="margin-top:.65rem">
+        <div class="sc-fill ${fillCls}" style="width:${pct}%"></div>
+      </div>
+    </div>
+    <div class="sc-body">
+      <div style="font-size:11.5px;font-weight:600;color:var(--g600);text-transform:uppercase;letter-spacing:.4px;margin-bottom:.5rem">Dept breakdown</div>
+      ${["A", "B", "C"]
+        .map((d) => {
+          const used = alloc[d];
+          const max = DEPT_MAX[d];
+          const p2 = Math.round((used / max) * 100);
+          return `<div class="dept-row">
+          <span class="dept-chip ${d.toLowerCase()}">${DEPT_META[d].label}</span>
+          <div class="dept-progress"><div class="dept-prog-fill dp-${d.toLowerCase()}" style="width:${p2}%"></div></div>
+          <span class="dept-frac">${used}/${max}</span>
+        </div>`;
+        })
+        .join("")}
+      <div class="people-section">
+        <div class="people-label">Assigned participants (${sessionPeople.length})</div>
+        <div class="people-list">
+          ${
+            sessionPeople.length
+              ? sessionPeople
+                  .map(
+                    (p) => `
+                <div class="person-row">
+                  <div class="person-dot ${p.dept.toLowerCase()}"></div>
+                  <span>${p.name}</span>
+                  <span class="person-id">${p.id}</span>
+                </div>`,
+                  )
+                  .join("")
+              : '<div class="no-people">No participants assigned yet</div>'
+          }
+        </div>
+      </div>
+    </div>
+  </div>`;
+        },
+      ).join("");
+
+      // ── DEPT TABLE ────────────────────────────────────────────────────────────────
+      const deptRows = ["A", "B", "C"]
+        .map((d) => {
+          const total = DEPT_META[d].total;
+          const assigned = allParticipants.filter(
+            (p) => p.dept === d && p.status === "assigned",
+          ).length;
+          const remaining = total - assigned;
+          const mPct = Math.round((assigned / total) * 100);
+          return `<tr>
+    <td><span class="dept-chip ${d.toLowerCase()}">${DEPT_META[d].label}</span></td>
+    <td>${total}</td>
+    <td>${DEPT_MAX[d]} per session</td>
+    <td style="font-weight:600;color:var(--b600)">${assigned}</td>
+    <td style="color:var(--amber);font-weight:500">${remaining}</td>
+    <td>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="flex:1;height:4px;background:var(--g100);border-radius:2px;min-width:60px;overflow:hidden">
+          <div style="height:100%;border-radius:2px;background:var(--b400);width:${mPct}%"></div>
+        </div>
+        <span style="font-size:11.5px;color:var(--g600)">${mPct}%</span>
+      </div>
+    </td>
+  </tr>`;
+        })
+        .join("");
+
+      const totA =
+        allocation.morning.A + allocation.midday.A + allocation.afternoon.A;
+      const totB =
+        allocation.morning.B + allocation.midday.B + allocation.afternoon.B;
+      const totC =
+        allocation.morning.C + allocation.midday.C + allocation.afternoon.C;
+
+      document.getElementById("dept-table").innerHTML = `
+  <thead><tr>
+    <th>Department</th><th>Total Staff</th><th>Session Limit</th>
+    <th>Assigned</th><th>Remaining</th><th>Progress</th>
+  </tr></thead>
+  <tbody>${deptRows}</tbody>
+  <tfoot><tr>
+    <td>Total</td><td>60</td><td>20/session</td>
+    <td>${totalAssigned}</td><td>${totalAvailable}</td>
+    <td style="font-size:12px;color:var(--g600)">${totalAssigned}/60 placed</td>
+  </tr></tfoot>
+`;
+    </script>
+  </body>
+</html>
