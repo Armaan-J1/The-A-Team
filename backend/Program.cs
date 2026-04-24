@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using backend.Data;
-
+using backend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,6 +8,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite("Data Source=allocation.db")
 );
+
+// Register your services
+builder.Services.AddScoped<ParticipantService>();
+builder.Services.AddScoped<SessionService>();
+builder.Services.AddScoped<CoordinatorService>();
 
 // CORS so the Vite frontend can call us
 builder.Services.AddCors(options =>
@@ -30,7 +35,7 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.EnsureCreated();
-    backend.Data.SeedData.Run(db);  // we'll create this next
+    backend.Data.SeedData.Run(db);
 }
 
 if (app.Environment.IsDevelopment())
