@@ -2887,31 +2887,24 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\sukdt\\.nuget\\packages\\": {},
-    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
+    "C:\\Users\\armaa\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\sukdt\\Github\\The-A-Team\\backend\\backend.csproj",
+      "projectUniqueName": "C:\\Users\\armaa\\hackathon\\seat-allocation\\backend\\backend.csproj",
       "projectName": "backend",
-      "projectPath": "C:\\Users\\sukdt\\Github\\The-A-Team\\backend\\backend.csproj",
-      "packagesPath": "C:\\Users\\sukdt\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\sukdt\\Github\\The-A-Team\\backend\\obj\\",
+      "projectPath": "C:\\Users\\armaa\\hackathon\\seat-allocation\\backend\\backend.csproj",
+      "packagesPath": "C:\\Users\\armaa\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\armaa\\hackathon\\seat-allocation\\backend\\obj\\",
       "projectStyle": "PackageReference",
-      "fallbackFolders": [
-        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-      ],
       "configFilePaths": [
-        "C:\\Users\\sukdt\\AppData\\Roaming\\NuGet\\NuGet.Config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        "C:\\Users\\armaa\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net10.0"
       ],
       "sources": {
-        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
