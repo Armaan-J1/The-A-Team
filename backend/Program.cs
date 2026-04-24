@@ -25,12 +25,13 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+
 // Create DB and seed on startup
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.EnsureCreated();
-    backend.Data.SeedData.Run(db);  // we'll create this next
+    backend.Data.SeedData.Run(db); 
 }
 
 if (app.Environment.IsDevelopment())
@@ -39,7 +40,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseCors();
+
+app.UseHttpsRedirection();
+app.UseCors("AllowReactApp");
+
 app.MapControllers();
 
 app.Run();
