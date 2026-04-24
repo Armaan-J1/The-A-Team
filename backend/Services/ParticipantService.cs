@@ -31,12 +31,15 @@ public class ParticipantService
             return new List<ParticipantAssignmentDto>();
 
         return await _context.Participants
+            .Include(p => p.Session)
             .Where(p => p.SessionId != null)
             .Where(p => p.DepartmentId == departmentId)
             .Select(p => new ParticipantAssignmentDto
             {
+                Id = p.Id,
                 Name = p.Name,
-                IsAssigned = true
+                IsAssigned = true,
+                SessionName = p.Session != null ? p.Session.Slot.ToString() : "Unassigned"
             })
             .OrderBy(p => p.Name)
             .ToListAsync();
@@ -50,12 +53,15 @@ public class ParticipantService
             return new List<ParticipantAssignmentDto>();
 
         return await _context.Participants
+            .Include(p => p.Session)
             .Where(p => p.SessionId == null)
             .Where(p => p.DepartmentId == departmentId)
             .Select(p => new ParticipantAssignmentDto
             {
+                Id = p.Id,
                 Name = p.Name,
-                IsAssigned = false
+                IsAssigned = false,
+                SessionName = "Unassigned"
             })
             .OrderBy(p => p.Name)
             .ToListAsync();
@@ -69,11 +75,14 @@ public class ParticipantService
             return new List<ParticipantAssignmentDto>();
 
         return await _context.Participants
+            .Include(p => p.Session)
             .Where(p => p.DepartmentId == departmentId)
             .Select(p => new ParticipantAssignmentDto
             {
+                Id = p.Id,
                 Name = p.Name,
-                IsAssigned = p.SessionId != null
+                IsAssigned = p.SessionId != null,
+                SessionName = p.Session != null ? p.Session.Slot.ToString() : "Unassigned"
             })
             .OrderBy(p => p.Name)
             .ToListAsync();
@@ -154,8 +163,10 @@ public class ParticipantService
 // DTO for Participant
 public class ParticipantAssignmentDto
 {
+    public int Id { get; set; } 
     public string Name { get; set; } = string.Empty;
     public bool IsAssigned { get; set; }
+    public string SessionName { get; set; } = string.Empty;
 }
 
 // Structured result for assignment operations

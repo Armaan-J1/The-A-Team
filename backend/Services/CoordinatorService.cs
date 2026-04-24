@@ -21,6 +21,7 @@ public class CoordinatorService
             .OrderBy(c => c.Name)
             .Select(c => new CoordinatorDto
             {
+                Id = c.Id,
                 Name = c.Name,
                 Department = c.Department != null ? c.Department.Name : "No Department"
             })
@@ -35,6 +36,7 @@ public class CoordinatorService
             .Where(c => c.Id == coordinatorId)
             .Select(c => new CoordinatorDto
             {
+                Id = c.Id,
                 Name = c.Name,
                 Department = c.Department != null ? c.Department.Name : "No Department"
             })
@@ -42,8 +44,6 @@ public class CoordinatorService
 
         return coordinator;
     }
-
-
 
     // Get department ID from coordinator ID
     public async Task<int?> GetDepartmentIdByCoordinatorIdAsync(int coordinatorId)
@@ -60,6 +60,7 @@ public class CoordinatorService
 // DTO for Coordinator
 public class CoordinatorDto
 {
+    public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Department { get; set; } = string.Empty;
 }
