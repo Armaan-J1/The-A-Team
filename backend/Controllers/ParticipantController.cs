@@ -26,7 +26,7 @@ namespace backend.Controllers
                     p.Id,
                     p.Name,
                     IsAssigned = p.SessionId != null,
-                    SessionName = p.Session != null ? p.Session.Name : "Unassigned"
+                    SessionName = p.Session != null ? p.Session.Slot.ToString() : "Unassigned" 
                 })
                 .ToListAsync();
 
